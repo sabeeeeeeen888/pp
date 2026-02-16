@@ -65,8 +65,14 @@ async def classify_root(file: UploadFile = File(...)):
 
 
 @app.get("/")
-def root():
-    return {"message": "Project Pelican API", "docs": "/docs"}
+async def root():
+    return {"status": "API is working", "message": "Hello from FastAPI"}
+
+
+@app.get("/test")
+@app.get("/api/test")
+async def test():
+    return {"test": "success"}
 
 
 @app.get("/health")

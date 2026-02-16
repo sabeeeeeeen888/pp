@@ -22,10 +22,12 @@ class VercelPathFixMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         if request.url.path.rstrip("/") in ("/api/index", "/api"):
-            q = request.query_params.get("path")
+            q = request.query_params.get("path") or ""
             if q:
                 request.scope["path"] = "/api/" + q.lstrip("/")
-                request.scope["raw_path"] = request.scope["path"].encode()
+            else:
+                request.scope["path"] = "/"  # so /api and /api/index hit root()
+            request.scope["raw_path"] = request.scope["path"].encode()
         return await call_next(request)
 
 
