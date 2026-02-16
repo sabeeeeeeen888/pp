@@ -5,10 +5,11 @@
   "framework": null,
   "rewrites": [
     { "source": "/classify", "destination": "/api/classify" },
+    { "source": "/api/:path*", "destination": "/api/index" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/[[...path]].py": {
+    "api/index.py": {
       "memory": 1024,
       "maxDuration": 30
     }
