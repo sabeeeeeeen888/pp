@@ -1,0 +1,74 @@
+.ai-classify {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.ai-classify h3 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 0.35rem;
+}
+
+.ai-classify-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0 0 0.5rem;
+  line-height: 1.35;
+}
+
+.ai-classify-input {
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+  max-width: 100%;
+}
+
+.ai-classify-actions {
+  margin-bottom: 0.5rem;
+}
+
+.ai-classify-muted,
+.ai-classify-error {
+  font-size: 0.75rem;
+  margin: 0.25rem 0;
+}
+
+.ai-classify-error {
+  color: var(--risk-high);
+}
+
+.ai-classify-result {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: var(--bg-dark);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.ai-classify-demo {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ai-classify-ai {
+  font-size: 0.7rem;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ai-classify-label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ai-classify-conf {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}

@@ -1,0 +1,239 @@
+.citizen-science-page .citizen-upload-form label {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.citizen-science-page .citizen-upload-form label span {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.citizen-science-page .citizen-upload-form input[type="file"],
+.citizen-science-page .citizen-upload-form input[type="text"],
+.citizen-science-page .citizen-upload-form input[type="date"],
+.citizen-science-page .citizen-upload-form textarea {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.citizen-science-page .citizen-upload-form textarea {
+  max-width: 100%;
+  min-height: 100px;
+  resize: vertical;
+}
+
+.citizen-file-name {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.citizen-demo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.citizen-demo-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.citizen-demo-image {
+  height: 140px;
+  background: linear-gradient(145deg, var(--border) 0%, var(--bg) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.citizen-demo-image-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.citizen-demo-body {
+  padding: 1rem;
+}
+
+.citizen-demo-desc {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.citizen-demo-meta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ========== Public Get Involved: Hero + Why + Action cards + Guidelines ========== */
+.citizen-hero {
+  margin-bottom: 2rem;
+}
+
+.citizen-hero-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: var(--text);
+  margin: 0 0 0.75rem;
+  line-height: 1.3;
+}
+
+.citizen-hero-text {
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--text);
+  margin: 0;
+  max-width: 640px;
+}
+
+/* Previous submissions (Public) */
+.citizen-previous-submissions {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.citizen-previous-submissions h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 1rem;
+}
+
+.citizen-previous-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.citizen-previous-item {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.citizen-previous-image-wrap {
+  margin-bottom: 0.75rem;
+  border-radius: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  max-width: 320px;
+}
+
+.citizen-previous-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.citizen-previous-item:last-child {
+  margin-bottom: 0;
+}
+
+.citizen-previous-item-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.citizen-previous-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  flex: 1;
+  min-width: 0;
+  letter-spacing: 0.01em;
+}
+
+.citizen-previous-delete {
+  flex-shrink: 0;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.citizen-previous-delete:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.citizen-previous-desc {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text);
+  margin: 0;
+}
+
+.citizen-researcher-feedback {
+  margin-top: 1rem;
+  padding: 0.875rem 1rem;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  border-left: 4px solid var(--accent, #0a7ea4);
+}
+
+.citizen-researcher-feedback strong {
+  display: block;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.citizen-researcher-feedback p {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--text);
+  margin: 0;
+}
+
+.citizen-claim-btn {
+  margin-top: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: var(--accent, #0a7ea4);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.citizen-claim-btn:hover {
+  filter: brightness(1.1);
+}
+
+.citizen-claim-claimed {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}

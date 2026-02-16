@@ -1,0 +1,76 @@
+.hero {
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  padding: 2rem 1rem;
+}
+
+.hero-inner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.hero-tagline {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: var(--text);
+  margin: 0 0 0.75rem;
+  letter-spacing: 0.01em;
+}
+
+.hero-mission {
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--text);
+  margin: 0 0 1.5rem;
+  max-width: 56ch;
+}
+
+.hero-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.hero-card {
+  display: block;
+  padding: 1rem 1.1rem;
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.hero-card:hover {
+  border-color: var(--text);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.hero-card-label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+
+.hero-card-desc {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+@media (min-width: 600px) {
+  .hero {
+    padding: 2.5rem 1.5rem;
+  }
+  .hero-tagline {
+    font-size: 1.5rem;
+  }
+  .hero-mission {
+    font-size: 1.05rem;
+  }
+}

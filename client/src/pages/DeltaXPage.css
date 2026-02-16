@@ -1,0 +1,198 @@
+/* Delta-X clean dashboard layout */
+.deltax-dashboard {
+  padding: 1.5rem max(1rem, env(safe-area-inset-right)) 2rem max(1.5rem, env(safe-area-inset-left));
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.deltax-dashboard-header {
+  margin-bottom: 1.5rem;
+}
+
+.deltax-dashboard-title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 400;
+  color: var(--text);
+  margin: 0 0 0.25rem;
+}
+
+.deltax-dashboard-tagline {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.deltax-dashboard-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .deltax-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Panels */
+.deltax-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+}
+
+.deltax-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.deltax-panel-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.deltax-panel-desc {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text);
+  margin: 0 0 1rem;
+}
+
+.deltax-panel-desc:last-of-type {
+  margin-bottom: 0;
+}
+
+.deltax-panel-cta {
+  margin: 0;
+}
+
+.deltax-panel-cta-note {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Status list (left panel) */
+.deltax-status-list {
+  margin-bottom: 1rem;
+}
+
+.deltax-status-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.deltax-status-item:last-child {
+  border-bottom: none;
+}
+
+.deltax-status-label {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.deltax-status-value {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.deltax-status-growing .deltax-status-value {
+  color: var(--risk-low);
+}
+
+.deltax-status-sinking .deltax-status-value {
+  color: var(--risk-high);
+}
+
+/* Links */
+.deltax-link {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.deltax-link:hover {
+  text-decoration: underline;
+  color: var(--brand);
+}
+
+/* Export button */
+.deltax-export-btn {
+  background: var(--text);
+  color: var(--bg-dark);
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.deltax-export-btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.deltax-export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Table */
+.deltax-muted {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.deltax-table-wrap {
+  overflow-x: auto;
+  margin-top: 0.5rem;
+}
+
+.deltax-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.deltax-table th,
+.deltax-table td {
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.deltax-table th {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.deltax-table tbody tr:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.deltax-table .risk-badge {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}

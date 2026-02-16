@@ -1,0 +1,63 @@
+:root {
+  /* Cream palette – only Project Pelican brand is green */
+  --bg-dark: #f8f5f0;
+  --bg-panel: #f0ebe3;
+  --brand: #2d6a2d;
+  --border: #c9c2b8;
+  --water: #dce8ec;
+  --risk-low: #16a34a;
+  --risk-mid: #ca8a04;
+  --risk-high: #dc2626;
+  --text: #2c2825;
+  --text-muted: #6b6560;
+  --font-display: "DM Serif Display", Georgia, serif;
+  --font-sans: "DM Sans", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--bg-dark);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+h1, h2, h3 {
+  line-height: 1.25;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: var(--text);
+}
+
+/* Focus styles for keyboard and a11y */
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* Leaflet overrides */
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: var(--water) !important;
+}
+.leaflet-popup-content-wrapper {
+  background: var(--bg-panel);
+  color: var(--text);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.leaflet-popup-tip { background: var(--bg-panel); }

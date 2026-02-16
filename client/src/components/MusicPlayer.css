@@ -1,0 +1,28 @@
+.music-toggle {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 9999;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: background 0.2s, transform 0.15s;
+}
+
+.music-toggle:hover {
+  background: var(--bg-dark);
+  transform: scale(1.05);
+}
+
+.music-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
