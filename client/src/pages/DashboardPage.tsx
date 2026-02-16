@@ -310,7 +310,7 @@ function ResearchDashboard({ user, navItems }: { user: { display_name?: string; 
           try {
             const scores = await fetchRiskScores({})
             const filled = fillDeltaxFieldsIfMissing(Array.isArray(scores) ? scores : [])
-            return computeEarlyWarningFromScores(filled as Array<Record<string, unknown>>)
+            return computeEarlyWarningFromScores(filled as RiskScore[])
           } catch {
             return []
           }

@@ -1,3 +1,5 @@
+import type { RiskScore } from './types'
+
 const DEFAULT_API_BASE = 'http://localhost:8000'
 function getApiBase(): string {
   if (typeof import.meta.env.VITE_API_URL === 'string' && import.meta.env.VITE_API_URL) {
@@ -204,9 +206,9 @@ function earlyWarningSignals(row: {
 }
 
 /** Compute early-warning rows from risk scores (client-side when API is unavailable). */
-export function computeEarlyWarningFromScores(scores: Array<Record<string, unknown>>): EarlyWarningRow[] {
+export function computeEarlyWarningFromScores(scores: RiskScore[]): EarlyWarningRow[] {
   return scores.map((row) => {
-    const { signals, collapse_risk_score } = earlyWarningSignals(row as Parameters<typeof earlyWarningSignals>[0])
+    const { signals, collapse_risk_score } = earlyWarningSignals(row)
     const collapse_risk = collapse_risk_score >= 0.6 ? 'High' : collapse_risk_score >= 0.3 ? 'Medium' : 'Low'
     const early_warning = collapse_risk === 'High' || collapse_risk === 'Medium' || signals.length >= 2
     return {
