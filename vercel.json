@@ -1,4 +1,10 @@
 {
-  "framework": "vite",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "buildCommand": "cd client && npm ci && npm run build",
+  "outputDirectory": "client/dist",
+  "installCommand": "cd client && npm ci",
+  "framework": null,
+  "rewrites": [
+    { "source": "/classify", "destination": "/api/classify" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
 }
