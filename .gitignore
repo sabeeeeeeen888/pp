@@ -17,6 +17,9 @@ server/dist/
 *.log
 npm-debug.log*
 .cache/
+__pycache__/
+*.pyc
+server/.venv/
 
 # OS
 .DS_Store

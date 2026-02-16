@@ -11,7 +11,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -49,9 +49,10 @@ async def api_ai_classify(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Classification error: {e!s}")
 
 
+@app.post("/api/classify")
 @app.post("/classify")
 async def classify_root(file: UploadFile = File(...)):
-    """Same as /api/ai/classify (CLIP when available)."""
+    """Same as /api/ai/classify (CLIP when available). /api/classify for Vercel rewrite."""
     content = await file.read()
     if not content:
         raise HTTPException(status_code=400, detail="Empty file. Choose an image and try again.")

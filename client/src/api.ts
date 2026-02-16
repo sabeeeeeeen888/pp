@@ -1,5 +1,15 @@
-const API = 'http://localhost:8000/api'
-const API_BASE = 'http://localhost:8000'
+const DEFAULT_API_BASE = 'http://localhost:8000'
+function getApiBase(): string {
+  if (typeof import.meta.env.VITE_API_URL === 'string' && import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/$/, '')
+  }
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin
+  }
+  return DEFAULT_API_BASE
+}
+const API_BASE = getApiBase()
+const API = `${API_BASE}/api`
 const API_ALT = 'http://127.0.0.1:8000/api'
 const API_BASE_ALT = 'http://127.0.0.1:8000'
 
