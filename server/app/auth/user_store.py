@@ -2,6 +2,7 @@
 Simple user store for sign-in. In-memory with optional JSON file persistence.
 """
 import json
+import os
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -17,6 +18,9 @@ _storage_path: Optional[Path] = None
 def _get_storage_path() -> Path:
     if _storage_path is not None:
         return _storage_path
+    # Vercel serverless: only /tmp is writable
+    if os.environ.get("VERCEL"):
+        return Path("/tmp") / "pelican_users.json"
     return Path(__file__).resolve().parent.parent.parent / "data" / "users.json"
 
 

@@ -6,5 +6,11 @@
   "rewrites": [
     { "source": "/classify", "destination": "/api/classify" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ]
+  ],
+  "functions": {
+    "api/[[...path]].py": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  }
 }
