@@ -31,10 +31,10 @@ export function EarlyWarningPage() {
           const { fetchRiskScores } = await import('../api')
           const scores = await fetchRiskScores({})
           const filled = fillDeltaxFieldsIfMissing(Array.isArray(scores) ? scores : [])
-          setRows(computeEarlyWarningFromScores(filled as Array<Record<string, unknown>>))
+          setRows(computeEarlyWarningFromScores(filled as unknown as Array<Record<string, unknown>>))
         } catch {
           const filled = fillDeltaxFieldsIfMissing(FALLBACK_RISK_SCORES)
-          setRows(computeEarlyWarningFromScores(filled as Array<Record<string, unknown>>))
+          setRows(computeEarlyWarningFromScores(filled as unknown as Array<Record<string, unknown>>))
         }
       })
       .finally(() => setLoading(false))
