@@ -1,13 +1,18 @@
 .home-page {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-hero-section {
   position: relative;
-  min-height: calc(100vh - 120px);
+  height: 100vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding-top: 72px; /* space for fixed transparent navbar so content stays below */
+  margin-top: 0;
 }
 
 .home-video-wrap {
@@ -57,13 +62,13 @@
 }
 
 .home-hero-title {
-  font-family: var(--font-display);
+  font-family: "Oswald", sans-serif;
   font-size: clamp(2.25rem, 8vw, 4rem);
-  font-weight: 400;
+  font-weight: 700;
   color: #fff;
   margin: 0 0 1rem;
   line-height: 1.1;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -138,11 +143,59 @@
   line-height: 1;
 }
 
+.home-data-section {
+  background: var(--bg-dark);
+  padding: 4rem 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top: 1px solid var(--border);
+}
+
+.home-data-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.home-data-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0;
+  font-weight: 500;
+}
+
+.home-nasa-logo-link {
+  display: inline-block;
+  transition: opacity 0.2s ease;
+}
+
+.home-nasa-logo-link:hover {
+  opacity: 0.8;
+}
+
+.home-nasa-logo {
+  height: 60px;
+  width: auto;
+  max-width: 200px;
+  object-fit: contain;
+}
+
 @media (min-width: 600px) {
   .home-hero-header {
     padding: 1.5rem 2rem 1rem;
   }
   .home-hero-title {
     font-size: clamp(2.5rem, 6vw, 4rem);
+  }
+  .home-data-section {
+    padding: 5rem 2rem;
+  }
+  .home-nasa-logo {
+    height: 80px;
   }
 }

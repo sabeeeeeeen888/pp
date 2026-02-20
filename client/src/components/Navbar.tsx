@@ -14,7 +14,7 @@ export function Navbar() {
   return (
     <nav className={`navbar ${isHome ? 'navbar-home' : ''}`}>
       <div className="navbar-inner">
-        <NavLink to="/" className="navbar-brand" end>
+        <NavLink to={user ? "/dashboard" : "/"} className="navbar-brand" end>
           Project Pelican
         </NavLink>
         {user && (

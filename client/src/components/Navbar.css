@@ -19,11 +19,11 @@
 }
 
 .navbar-home {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 1000;
   width: 100%;
   box-sizing: border-box;
 }
@@ -55,7 +55,7 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  gap: 0.25rem 0.75rem;
+  gap: 0.25rem 3.5rem;
   justify-content: center;
   align-items: center;
 }
@@ -117,13 +117,15 @@
 }
 
 .navbar-home .navbar-brand {
-  color: var(--brand);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  color: #fff;
+  -webkit-text-stroke: 0.25px rgba(45, 106, 45, 0.9);
+  text-stroke: 0.25px rgba(45, 106, 45, 0.9);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .navbar-home .navbar-brand:hover {
-  color: var(--brand);
-  filter: brightness(1.15);
+  color: #fff;
+  filter: brightness(1.1);
 }
 
 .navbar-home .navbar-role {
