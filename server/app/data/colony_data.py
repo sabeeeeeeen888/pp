@@ -63,15 +63,21 @@ def generate_synthetic_records() -> List[Dict[str, Any]]:
 
 
 def _load_records() -> List[Dict[str, Any]]:
-    """Use Colibri Excel if present (in project root), else synthetic."""
+    """Use SummaryFileGenerated.xlsx (preferred, has real coordinates) or Colibri Excel if present, else synthetic."""
     project_root = Path(__file__).resolve().parent.parent.parent.parent
-    xlsx = project_root / "Colibri2010-21ColonyTotalsMayJuneCombined_8Nov22.xlsx"
-    try:
-        records = load_colony_data_from_excel(xlsx)
-        if records:
-            return records
-    except Exception:
-        pass
+    # Try SummaryFileGenerated first (has real GPS coordinates)
+    summary_file = project_root / "SummaryFileGenerated.xlsx"
+    colibri_file = project_root / "Colibri2010-21ColonyTotalsMayJuneCombined_8Nov22.xlsx"
+    
+    for xlsx_file in [summary_file, colibri_file]:
+        if xlsx_file.exists():
+            try:
+                records = load_colony_data_from_excel(xlsx_file)
+                if records:
+                    return records
+            except Exception:
+                continue
+    
     return generate_synthetic_records()
 
 

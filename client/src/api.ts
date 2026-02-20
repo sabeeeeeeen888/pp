@@ -5,7 +5,13 @@ function getApiBase(): string {
   if (typeof import.meta.env.VITE_API_URL === 'string' && import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL.replace(/\/$/, '')
   }
-  if (typeof window !== 'undefined' && window.location?.origin) {
+  // In development (localhost or 127.0.0.1), always use localhost:8000 for backend
+  if (typeof window !== 'undefined' && window.location) {
+    const hostname = window.location.hostname
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return DEFAULT_API_BASE
+    }
+    // In production (Vercel), use same origin
     return window.location.origin
   }
   return DEFAULT_API_BASE
