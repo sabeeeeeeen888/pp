@@ -158,6 +158,46 @@ export async function fetchColonies(params?: { year?: number; species?: string }
   return r.json()
 }
 
+export interface ColonyRecord {
+  colony_id: string
+  year?: number
+  species?: string
+  nest_count?: number
+  latitude?: number
+  longitude?: number
+  site_index?: number
+}
+
+export async function fetchColonyById(colonyId: string): Promise<ColonyRecord[]> {
+  const { api } = getBase()
+  const r = await fetch(`${api}/colonies/by-id/${encodeURIComponent(colonyId)}`)
+  if (!r.ok) throw new Error('Colony not found')
+  return r.json()
+}
+
+export interface NaturalLanguageQueryResult {
+  answer: string
+  colony_ids: string[]
+}
+
+export async function fetchNaturalLanguageQuery(params: {
+  query: string
+  colony_data: Array<Record<string, unknown>>
+}): Promise<NaturalLanguageQueryResult> {
+  const { api } = getBase()
+  const r = await fetch(`${api}/ai/query`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: params.query,
+      context: 'Project Pelican colony and habitat risk data. Colony IDs are strings like LA-CO-12-1001 or FL-Navarre-Causeway-B.',
+      colony_data: params.colony_data,
+    }),
+  })
+  if (!r.ok) throw new Error('Query failed')
+  return r.json()
+}
+
 export async function fetchRiskScores(params?: { year?: number; species?: string }) {
   const { api } = getBase()
   const url = new URL(`${api}/analytics/risk`)
@@ -178,6 +218,24 @@ export interface EarlyWarningRow {
   elevation_decline_rate?: number
   sediment_deposition_rate?: number
   water_surface_variability?: number
+  /** Real NASA subsidence rate in mm/year (positive = sinking). Null when real data not loaded. */
+  subsidence_rate_mm_year?: number | null
+  /** RTK elevation metres NAVD88 (doi:2071) */
+  elevation_m_navd88?: number | null
+  /** Feldspar sediment accretion mm/yr (doi:2381) */
+  sediment_accretion_mm_year?: number | null
+  /** Aboveground biomass g/m² (doi:2237) */
+  biomass_g_m2?: number | null
+  /** AirSWOT water surface height metres (doi:2128) */
+  water_surface_height_m?: number | null
+  /** Vegetation health 0-1 (normalised from biomass) */
+  vegetation_health?: number | null
+  /** Pipe-separated dataset source list */
+  datasets_used?: string
+  /** 'growing' | 'sinking' | 'stable' | 'unknown' — from real Delta-X CSV or fallback */
+  deltax_trend?: string
+  /** e.g. 'Delta-X (high precision)' or 'outside Delta-X coverage — using NOAA fallback' */
+  deltax_coverage_tier?: string
   decline_rate?: number
   signals: string[]
   collapse_risk: 'High' | 'Medium' | 'Low'
@@ -195,6 +253,7 @@ function earlyWarningSignals(row: {
   elevation_decline_rate?: number
   sediment_deposition_rate?: number
   longitude?: number
+  deltax_trend?: string
   water_surface_variability?: number
   decline_rate?: number
   habitat_vulnerability?: number
@@ -202,7 +261,12 @@ function earlyWarningSignals(row: {
   const signals: string[] = []
   if (row.elevation_decline_rate != null && row.elevation_decline_rate >= THRESHOLD_ELEVATION_DECLINE) signals.push('elevation_loss')
   if (row.sediment_deposition_rate != null && row.sediment_deposition_rate <= THRESHOLD_SEDIMENT_LOW) signals.push('sediment_starvation')
-  if (row.longitude != null && row.longitude >= LON_BOUNDARY) signals.push('shoreline_stress')
+  // Prefer deltax_trend (real data) over longitude boundary
+  if (row.deltax_trend === 'sinking') {
+    signals.push('shoreline_stress')
+  } else if (row.deltax_trend !== 'growing' && row.longitude != null && row.longitude >= LON_BOUNDARY) {
+    signals.push('shoreline_stress')
+  }
   if (row.water_surface_variability != null && row.water_surface_variability >= THRESHOLD_WATER_VARIABILITY) signals.push('water_pooling')
   if ((row.decline_rate ?? 0) >= THRESHOLD_DECLINE_NESTS) signals.push('colony_decline')
   const n = signals.length / 5
@@ -217,6 +281,7 @@ export function computeEarlyWarningFromScores(scores: RiskScore[]): EarlyWarning
     const { signals, collapse_risk_score } = earlyWarningSignals(row)
     const collapse_risk = collapse_risk_score >= 0.6 ? 'High' : collapse_risk_score >= 0.3 ? 'Medium' : 'Low'
     const early_warning = collapse_risk === 'High' || collapse_risk === 'Medium' || signals.length >= 2
+    const r = row as Record<string, unknown>
     return {
       colony_id: String(row.colony_id),
       latitude: row.latitude as number | undefined,
@@ -227,6 +292,15 @@ export function computeEarlyWarningFromScores(scores: RiskScore[]): EarlyWarning
       elevation_decline_rate: row.elevation_decline_rate as number | undefined,
       sediment_deposition_rate: row.sediment_deposition_rate as number | undefined,
       water_surface_variability: row.water_surface_variability as number | undefined,
+      subsidence_rate_mm_year: r.subsidence_rate_mm_year as number | null | undefined,
+      elevation_m_navd88: r.elevation_m_navd88 as number | null | undefined,
+      sediment_accretion_mm_year: r.sediment_accretion_mm_year as number | null | undefined,
+      biomass_g_m2: r.biomass_g_m2 as number | null | undefined,
+      water_surface_height_m: r.water_surface_height_m as number | null | undefined,
+      vegetation_health: r.vegetation_health as number | null | undefined,
+      datasets_used: r.datasets_used as string | undefined,
+      deltax_trend: r.deltax_trend as string | undefined,
+      deltax_coverage_tier: r.deltax_coverage_tier as string | undefined,
       decline_rate: row.decline_rate as number | undefined,
       signals,
       collapse_risk,
@@ -240,6 +314,62 @@ export async function fetchEarlyWarning(): Promise<EarlyWarningRow[]> {
   const { api } = getBase()
   const r = await fetchWithFallback(`${api}/analytics/early-warning`, `${API_ALT}/analytics/early-warning`)
   if (!r.ok) throw new Error('Early-warning failed')
+  return r.json()
+}
+
+/** Result row from automated aerial change detection (imagery vs Delta-X). */
+export interface ChangeDetectionResult {
+  colony_id: string
+  latitude?: number | null
+  longitude?: number | null
+  vegetation_change_pct?: number | null
+  visible_change_pct?: number | null
+  shoreline_retreat_proxy_pct?: number | null
+  imagery_available: boolean
+  year_a: number
+  year_b: number
+  delta_x_risk: string
+  habitat_vulnerability?: number | null
+  in_sinking_zone: boolean
+  imagery_confirms?: boolean | null
+  message?: string | null
+  error?: string
+}
+
+export async function fetchChangeDetection(params: {
+  colony_ids: string[]
+  year_a: number
+  year_b: number
+}): Promise<{ results: ChangeDetectionResult[]; message?: string }> {
+  const { api } = getBase()
+  const body = JSON.stringify({
+    colony_ids: params.colony_ids,
+    year_a: params.year_a,
+    year_b: params.year_b,
+  })
+  let r = await fetch(`${api}/analytics/change-detection`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body,
+  })
+  if (r.status === 404 && api.startsWith('http://localhost')) {
+    r = await fetch(`${API_ALT}/analytics/change-detection`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body })
+  }
+  if (r.status === 404) {
+    r = await fetch(`${api}/change-detection`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body })
+  }
+  if (r.status === 404 && api.startsWith('http://localhost')) {
+    r = await fetch(`${API_ALT}/change-detection`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body })
+  }
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}))
+    if (r.status === 404) {
+      throw new Error('Change detection endpoint not found. Run the project backend on port 8000 (./run-backend.sh or: cd server && source .venv/bin/activate && uvicorn app.main:app --port 8000).')
+    }
+    const detail = err.detail ?? err.message ?? (typeof err === 'string' ? err : 'Change detection failed')
+    const msg = Array.isArray(detail) ? detail[0]?.msg ?? String(detail) : String(detail)
+    throw new Error(msg || 'Change detection failed')
+  }
   return r.json()
 }
 
@@ -288,12 +418,18 @@ export interface DeltaxSummary {
   colonies_in_sinking_zone: number
   colonies_in_growing_zone: number
   total_colonies: number
+  /** True when data/deltax/deltax_colony_subsidence.csv is loaded (real NASA data). */
+  real_deltax_data_loaded?: boolean
+  /** Human-readable data source description. */
+  data_source?: string
   top_5_priority: Array<{
     colony_id: string
     risk_category: string
     habitat_risk_score: number
     habitat_vulnerability: number | null
     in_sinking_zone: boolean
+    subsidence_rate_mm_year?: number | null
+    deltax_coverage_tier?: string
   }>
 }
 

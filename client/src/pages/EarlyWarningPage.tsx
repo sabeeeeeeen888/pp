@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { getRoleConfig } from '../config/roles'
 import { fetchEarlyWarning, computeEarlyWarningFromScores, fillDeltaxFieldsIfMissing } from '../api'
 import { FALLBACK_RISK_SCORES } from '../fallbackData'
+import { exportTablePDF } from '../utils/pdfExport'
+import { getCoverageTierLabel, getCoverageBadge } from '../utils/coverageTier'
 import type { EarlyWarningRow } from '../api'
 import './FeaturePage.css'
 
@@ -108,11 +110,35 @@ export function EarlyWarningPage() {
             <p className="muted" style={{ marginBottom: '0.75rem' }}>
               {flagged.length} of {rows.length} colonies flagged for early warning (collapse risk 1–3 years ahead).
             </p>
+            {roleConfig.canExport && (
+              <p style={{ marginBottom: '0.75rem' }}>
+                <button
+                  type="button"
+                  className="priorities-export-btn"
+                  onClick={() => exportTablePDF({
+                    title: 'Early Warning Collapse Detection',
+                    filterSummary: 'Flagged and sorted by collapse risk',
+                    headers: ['Colony', 'Risk', 'Collapse risk', 'Precursor signals'],
+                    rows: sorted.slice(0, 100).map((r) => [
+                      r.colony_id,
+                      r.risk_category,
+                      `${r.collapse_risk} (${((r.collapse_risk_score ?? 0) * 100).toFixed(0)}%)`,
+                      r.signals.map((s) => SIGNAL_LABELS[s] ?? s).join(', ') || '—',
+                    ]),
+                    filename: `early-warning-${new Date().toISOString().slice(0, 10)}.pdf`,
+                  })}
+                  disabled={loading || sorted.length === 0}
+                >
+                  Export PDF
+                </button>
+              </p>
+            )}
             <div className="feature-table-wrap">
               <table className="feature-table">
                 <thead>
                   <tr>
                     <th>Colony</th>
+                    <th>Coverage</th>
                     <th>Risk</th>
                     <th>Collapse risk (1–3 yr)</th>
                     <th>Precursor signals</th>
@@ -122,9 +148,28 @@ export function EarlyWarningPage() {
                 <tbody>
                   {sorted.slice(0, 40).map((r) => (
                     <tr key={r.colony_id} className={r.early_warning ? 'early-warning-row' : ''}>
-                      <td>{r.colony_id}</td>
+                      <td><Link to={`/colony/${encodeURIComponent(r.colony_id)}`} className="feature-link">{r.colony_id}</Link></td>
                       <td>
-                        <span className={`risk-badge risk-${r.risk_category.toLowerCase()}`}>{r.risk_category}</span>
+                        <span
+                          className="coverage-tier-badge"
+                          title={getCoverageTierLabel(r.latitude, r.longitude, r.deltax_coverage_tier)}
+                        >
+                          {getCoverageBadge(r.latitude, r.longitude, r.deltax_coverage_tier)}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                        className={`risk-badge risk-${r.risk_category.toLowerCase()}`}
+                        title={[
+                          r.habitat_vulnerability != null ? `Habitat vulnerability: ${(r.habitat_vulnerability * 100).toFixed(0)}%` : null,
+                          r.subsidence_rate_mm_year != null ? `Subsidence: ${r.subsidence_rate_mm_year.toFixed(2)} mm/yr` : null,
+                          r.elevation_decline_rate != null ? `Elevation decline: ${r.elevation_decline_rate.toFixed(2)}` : null,
+                          r.sediment_deposition_rate != null ? `Sediment: ${r.sediment_deposition_rate.toFixed(2)}` : null,
+                          r.water_surface_variability != null ? `Water variability: ${r.water_surface_variability.toFixed(2)}` : null,
+                        ].filter(Boolean).join(' · ')}
+                      >
+                        {r.risk_category}
+                      </span>
                       </td>
                       <td>
                         <span className={`collapse-risk collapse-${r.collapse_risk.toLowerCase()}`}>

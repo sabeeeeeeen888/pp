@@ -10,6 +10,7 @@ import {
   BarChart,
   Bar,
   Cell,
+  ReferenceLine,
 } from 'recharts'
 import { useAuth } from '../contexts/AuthContext'
 import { getRoleConfig } from '../config/roles'
@@ -130,7 +131,7 @@ function PublicCoastalDashboard() {
 
   const trendData = useMemo(() => {
     const list = years.length ? years : FALLBACK_YEARS
-    return list
+    const raw = list
       .map((yr) => {
         const s = scoresByYear[yr] ?? []
         const count = s.length
@@ -138,7 +139,17 @@ function PublicCoastalDashboard() {
         return { year: String(yr), colonyCount: count, speciesRichness: Math.round(avgRichness * 10) / 10 }
       })
       .filter((d) => d.colonyCount > 0)
+    if (raw.length && raw[0].year !== '2005') {
+      return [{ year: '2005', colonyCount: 0, speciesRichness: 0 }, ...raw]
+    }
+    return raw
   }, [years, scoresByYear])
+
+  const EVENT_YEARS = [
+    { year: '2005', label: 'Hurricane Katrina' },
+    { year: '2010', label: 'Deepwater Horizon oil spill' },
+    { year: '2021', label: 'Hurricane Ida' },
+  ]
 
   const riskDistribution = useMemo(() => {
     const counts = currentScores.reduce(
@@ -218,6 +229,15 @@ function PublicCoastalDashboard() {
                   <XAxis dataKey="year" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
                   <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
                   <Tooltip contentStyle={{ background: 'var(--bg-panel)', border: '1px solid var(--border)' }} labelFormatter={(l) => `Year ${l}`} />
+                  {EVENT_YEARS.map((e) => (
+                    <ReferenceLine
+                      key={e.year}
+                      x={e.year}
+                      stroke="#94a3b8"
+                      strokeDasharray="4 4"
+                      label={{ value: e.label, position: 'top', fill: '#94a3b8', fontSize: 10 }}
+                    />
+                  ))}
                   <Bar dataKey="colonyCount" name="Colonies" fill="var(--brand)" radius={[0, 0, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>

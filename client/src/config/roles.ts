@@ -39,6 +39,7 @@ export const ROLES: Record<RoleId, RoleConfig> = {
     nav: [
       { path: '/dashboard', label: 'Dashboard' },
       { path: '/explore', label: 'Explore' },
+      { path: '/change-detection', label: 'Change detection' },
       { path: '/citizen-science', label: 'Get involved' },
       { path: '/deltax', label: 'Delta-X' },
     ],
@@ -61,6 +62,8 @@ export const ROLES: Record<RoleId, RoleConfig> = {
     description: 'Data-driven planning. Raw datasets, downloadable CSV/GeoJSON, risk weight adjustments, AI classification, predictive modeling, elevation & sediment analytics. Approve submissions, validate AI, export reports.',
     nav: [
       { path: '/dashboard', label: 'Dashboard' },
+      { path: '/explore', label: 'Explore' },
+      { path: '/change-detection', label: 'Change detection' },
       { path: '/review', label: 'Review' },
       { path: '/priorities', label: 'Priorities' },
       { path: '/geospatial', label: 'Data & metrics' },

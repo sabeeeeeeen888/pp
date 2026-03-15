@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { getRoleConfig } from '../config/roles'
 import { fetchRiskScores } from '../api'
 import { FALLBACK_RISK_SCORES } from '../fallbackData'
+import { exportTablePDF } from '../utils/pdfExport'
+import { getCoverageTierLabel, getCoverageBadge } from '../utils/coverageTier'
 import type { RiskScore } from '../types'
 import './PrioritiesPage.css'
 
@@ -28,6 +30,25 @@ function exportRiskDataCSV(data: RiskScore[]) {
   URL.revokeObjectURL(a.href)
 }
 
+function exportPrioritiesPDF(data: RiskScore[], filterLabel: string, speciesLabel: string) {
+  const filterSummary = `${filterLabel}${speciesLabel ? ` · Species: ${speciesLabel}` : ''}`
+  exportTablePDF({
+    title: 'Restoration Priorities',
+    filterSummary,
+    headers: ['Colony', 'Risk', 'Score', 'Habitat vuln.', 'Species richness', 'Decline rate', 'Species (sample)'],
+    rows: data.map((r) => [
+      r.colony_id,
+      r.risk_category,
+      `${(r.habitat_risk_score * 100).toFixed(1)}%`,
+      r.habitat_vulnerability != null ? `${(r.habitat_vulnerability * 100).toFixed(0)}%` : '—',
+      String(r.species_richness),
+      r.decline_rate.toFixed(0),
+      (r.species_list ?? []).slice(0, 3).join(', ') + ((r.species_list?.length ?? 0) > 3 ? '…' : ''),
+    ]),
+    filename: `priorities-${new Date().toISOString().slice(0, 10)}.pdf`,
+  })
+}
+
 export function PrioritiesPage() {
   const { user } = useAuth()
   const roleConfig = getRoleConfig(user?.role)
@@ -35,6 +56,7 @@ export function PrioritiesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'high' | 'moderate' | 'low'>('high')
+  const [speciesFilter, setSpeciesFilter] = useState<string>('')
   const [shareCopied, setShareCopied] = useState(false)
   const copyShareLink = useCallback(() => {
     navigator.clipboard.writeText(window.location.href).then(() => {
@@ -51,12 +73,17 @@ export function PrioritiesPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const filtered = data.filter((r) => {
-    if (filter === 'all') return true
-    if (filter === 'high') return r.risk_category === 'High'
-    if (filter === 'moderate') return r.risk_category === 'Moderate'
-    return r.risk_category === 'Low'
-  }).sort((a, b) => b.habitat_risk_score - a.habitat_risk_score)
+  const speciesList = Array.from(new Set(data.flatMap((r) => r.species_list ?? []))).sort()
+
+  const filtered = data
+    .filter((r) => {
+      if (filter === 'high' && r.risk_category !== 'High') return false
+      if (filter === 'moderate' && r.risk_category !== 'Moderate') return false
+      if (filter === 'low' && r.risk_category !== 'Low') return false
+      if (speciesFilter && !(r.species_list ?? []).includes(speciesFilter)) return false
+      return true
+    })
+    .sort((a, b) => b.habitat_risk_score - a.habitat_risk_score)
 
   if (!roleConfig.canPriorities) {
     return (
@@ -90,10 +117,24 @@ export function PrioritiesPage() {
             <option value="all">All colonies</option>
           </select>
         </label>
+        <label>
+          <span>Species</span>
+          <select value={speciesFilter} onChange={(e) => setSpeciesFilter(e.target.value)}>
+            <option value="">All species</option>
+            {speciesList.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </label>
         {roleConfig.canExport && (
-          <button type="button" className="priorities-export-btn" onClick={() => exportRiskDataCSV(filtered)} disabled={loading || filtered.length === 0}>
-            Export CSV
-          </button>
+          <>
+            <button type="button" className="priorities-export-btn" onClick={() => exportRiskDataCSV(filtered)} disabled={loading || filtered.length === 0}>
+              Export CSV
+            </button>
+            <button type="button" className="priorities-export-btn" onClick={() => exportPrioritiesPDF(filtered, filter === 'high' ? 'High priority only' : filter === 'moderate' ? 'Moderate only' : filter === 'low' ? 'Low only' : 'All colonies', speciesFilter || 'All species')} disabled={loading || filtered.length === 0}>
+              Export PDF
+            </button>
+          </>
         )}
         {roleConfig.canShareLink && (
           <button type="button" className="priorities-export-btn" onClick={copyShareLink}>
@@ -111,6 +152,7 @@ export function PrioritiesPage() {
             <thead>
               <tr>
                 <th>Colony</th>
+                <th>Coverage</th>
                 <th>Risk</th>
                 <th>Score</th>
                 <th>Habitat vuln.</th>
@@ -122,9 +164,26 @@ export function PrioritiesPage() {
             <tbody>
               {filtered.map((r) => (
                 <tr key={r.colony_id}>
-                  <td>{r.colony_id}</td>
+                  <td><Link to={`/colony/${encodeURIComponent(r.colony_id)}`} className="feature-link">{r.colony_id}</Link></td>
                   <td>
-                    <span className={`risk-badge risk-${r.risk_category.toLowerCase()}`}>
+                    <span
+                      className="coverage-tier-badge"
+                      title={getCoverageTierLabel(r.latitude, r.longitude, (r as {deltax_coverage_tier?: string}).deltax_coverage_tier)}
+                    >
+                      {getCoverageBadge(r.latitude, r.longitude, (r as {deltax_coverage_tier?: string}).deltax_coverage_tier)}
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      className={`risk-badge risk-${r.risk_category.toLowerCase()}`}
+                      title={[
+                        r.habitat_vulnerability != null ? `Habitat vulnerability: ${(r.habitat_vulnerability * 100).toFixed(0)}%` : null,
+                        (r as {subsidence_rate_mm_year?: number | null}).subsidence_rate_mm_year != null ? `Subsidence: ${((r as {subsidence_rate_mm_year?: number}).subsidence_rate_mm_year as number).toFixed(2)} mm/yr` : null,
+                        r.elevation_decline_rate != null ? `Elevation decline: ${r.elevation_decline_rate.toFixed(2)}` : null,
+                        r.sediment_deposition_rate != null ? `Sediment: ${r.sediment_deposition_rate.toFixed(2)}` : null,
+                        r.water_surface_variability != null ? `Water variability: ${r.water_surface_variability.toFixed(2)}` : null,
+                      ].filter(Boolean).join(' · ')}
+                    >
                       {r.risk_category}
                     </span>
                   </td>

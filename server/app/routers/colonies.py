@@ -30,3 +30,9 @@ def list_years() -> List[int]:
 def list_species() -> List[str]:
     """All species in the dataset."""
     return sorted(set(r["species"] for r in COLONY_RECORDS))
+
+
+@router.get("/by-id/{colony_id:path}")
+def get_colony_by_id(colony_id: str) -> List[dict]:
+    """All records for one colony (for detail page: nest counts by year, species list)."""
+    return [r for r in COLONY_RECORDS if r.get("colony_id") == colony_id]

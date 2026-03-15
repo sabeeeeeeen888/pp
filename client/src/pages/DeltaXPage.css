@@ -72,6 +72,39 @@
   margin-bottom: 0;
 }
 
+.deltax-coverage-note {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.coverage-tier-inline {
+  background: rgba(22, 163, 74, 0.2);
+  color: #86efac;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+.coverage-tier-inline.noaa {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+.coverage-tier-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  background: rgba(22, 163, 74, 0.25);
+  color: #86efac;
+}
+
+.coverage-tier-badge[title*="NOAA"] {
+  background: rgba(59, 130, 246, 0.25);
+  color: #93c5fd;
+}
+
 .deltax-panel-cta {
   margin: 0;
 }
@@ -195,4 +228,54 @@
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+/* Real NASA data notice */
+.deltax-real-data-note {
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.82rem;
+  color: #16a34a;
+  margin-top: 0.5rem;
+}
+.deltax-real-data-note a {
+  color: #16a34a;
+  text-decoration: underline;
+}
+
+/* Subsidence value colouring */
+.deltax-sinking-val {
+  color: #dc2626;
+  font-weight: 600;
+}
+.deltax-growing-val {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+/* Trend badge in table */
+.deltax-trend-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.deltax-trend-badge.growing {
+  background: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
+}
+.deltax-trend-badge.sinking {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}
+.deltax-trend-badge.stable {
+  background: rgba(202, 138, 4, 0.1);
+  color: #b45309;
+}
+.deltax-trend-badge.unknown {
+  color: var(--text-muted);
 }

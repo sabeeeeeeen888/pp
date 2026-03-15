@@ -4,7 +4,9 @@ import { useAuth } from '../contexts/AuthContext'
 import { getRoleConfig } from '../config/roles'
 import { MapView } from '../components/MapView'
 import { Dashboard } from '../components/Dashboard'
-import { fetchYears, fetchSpecies, fetchRiskScores, fetchLandLossZones, buildDeltaxSummaryFromScores } from '../api'
+import { ImageryComparison } from '../components/ImageryComparison'
+import { fetchYears, fetchSpecies, fetchRiskScores, fetchLandLossZones, buildDeltaxSummaryFromScores, fetchChangeDetection, fetchNaturalLanguageQuery } from '../api'
+import type { ChangeDetectionResult } from '../api'
 import { FALLBACK_RISK_SCORES } from '../fallbackData'
 import type { RiskScore } from '../types'
 import type { LandLossFeature } from '../api'
@@ -54,6 +56,20 @@ export function ExplorePage() {
   const [centerOn, setCenterOn] = useState<{ lat: number; lng: number } | null>(null)
   const [shareCopied, setShareCopied] = useState(false)
   const [basemap, setBasemap] = useState<'dark' | 'light' | 'satellite'>('dark')
+  const [imageryOverlay, setImageryOverlay] = useState(false)
+  const [imageryOverlayOpacity, setImageryOverlayOpacity] = useState(0.88)
+  const [selectedColony, setSelectedColony] = useState<RiskScore | null>(null)
+  const [showImageryComparison, setShowImageryComparison] = useState(false)
+  const [changeDetectionColonyIds, setChangeDetectionColonyIds] = useState<string[]>([])
+  const [changeYearA, setChangeYearA] = useState(2010)
+  const [changeYearB, setChangeYearB] = useState(2024)
+  const [changeResults, setChangeResults] = useState<ChangeDetectionResult[] | null>(null)
+  const [changeLoading, setChangeLoading] = useState(false)
+  const [changeError, setChangeError] = useState<string | null>(null)
+  const [aiQuery, setAiQuery] = useState('')
+  const [aiAnswer, setAiAnswer] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiHighlightIds, setAiHighlightIds] = useState<string[]>([])
 
   const connectToBackend = () => {
     setLoading(true)
@@ -146,6 +162,85 @@ export function ExplorePage() {
     }
   }, [colonyParam, riskData])
 
+  // Deep link: scroll to Change detection when hash is #change-detection
+  useEffect(() => {
+    if (window.location.hash === '#change-detection') {
+      document.getElementById('change-detection')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [])
+
+  const runChangeDetection = useCallback(() => {
+    const ids = changeDetectionColonyIds.length >= 1 ? changeDetectionColonyIds : top5.slice(0, 3).map((s) => s.colony_id)
+    if (ids.length === 0) {
+      setChangeError('Select at least one colony or load data first.')
+      return
+    }
+    setChangeError(null)
+    setChangeResults(null)
+    setChangeLoading(true)
+    fetchChangeDetection({ colony_ids: ids, year_a: changeYearA, year_b: changeYearB })
+      .then((res) => {
+        setChangeResults(res.results)
+        setChangeError(null)
+      })
+      .catch((e) => {
+        const msg = e?.message ?? 'Change detection failed'
+        const isNetwork = /load failed|failed to fetch|network error|connection refused|err_connection_refused/i.test(msg) || msg.includes('fetch') || msg.includes('Network')
+        setChangeError(isNetwork ? 'Backend not reachable. Start the server on port 8000 (e.g. ./run-backend.sh) and try again.' : msg)
+        const is404 = /endpoint not found|404/i.test(msg)
+        if (is404 && ids.length > 0 && riskData.length > 0) {
+          setChangeResults(ids.slice(0, 5).map((cid) => {
+            const row = riskData.find((r) => r.colony_id === cid)
+            return {
+              colony_id: cid,
+              latitude: row?.latitude ?? null,
+              longitude: row?.longitude ?? null,
+              vegetation_change_pct: null,
+              visible_change_pct: null,
+              shoreline_retreat_proxy_pct: null,
+              imagery_available: false,
+              year_a: changeYearA,
+              year_b: changeYearB,
+              delta_x_risk: row?.risk_category ?? '—',
+              in_sinking_zone: (row?.longitude ?? 0) >= -91.2,
+              imagery_confirms: null,
+              error: undefined,
+            }
+          }))
+        } else if (!is404) {
+          setChangeResults(null)
+        }
+      })
+      .finally(() => setChangeLoading(false))
+  }, [changeDetectionColonyIds, changeYearA, changeYearB, top5, riskData])
+
+  const runAiQuery = useCallback(() => {
+    const q = aiQuery.trim()
+    if (!q) return
+    setAiLoading(true)
+    setAiAnswer(null)
+    setAiHighlightIds([])
+    const colonyData = riskData.map((r) => ({
+      colony_id: r.colony_id,
+      risk_category: r.risk_category,
+      latitude: r.latitude,
+      longitude: r.longitude,
+      species_list: r.species_list,
+      species_richness: r.species_richness,
+      habitat_vulnerability: r.habitat_vulnerability,
+    }))
+    fetchNaturalLanguageQuery({ query: q, colony_data: colonyData })
+      .then((res) => {
+        setAiAnswer(res.answer)
+        setAiHighlightIds(res.colony_ids || [])
+      })
+      .catch(() => {
+        setAiAnswer('Query failed. Is the backend running and ANTHROPIC_API_KEY set?')
+        setAiHighlightIds([])
+      })
+      .finally(() => setAiLoading(false))
+  }, [aiQuery, riskData])
+
   return (
     <div className="explore-page">
       {apiConnected === false && (
@@ -173,6 +268,30 @@ export function ExplorePage() {
         <p className="tagline">Louisiana Gulf Coast colonies · filters and analytics</p>
         <p className="header-solution">Colony data + habitat risk + land-loss zones so you know where to act first.</p>
       </header>
+      <div className="explore-ai-query">
+        <label className="explore-ai-query-label">
+          <span className="visually-hidden">Ask a question about the data</span>
+          <input
+            type="text"
+            className="explore-ai-query-input"
+            placeholder="Ask a question about the data... e.g. Which high-risk colonies have Brown Pelican?"
+            value={aiQuery}
+            onChange={(e) => setAiQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && runAiQuery()}
+          />
+          <button type="button" className="explore-ai-query-btn" onClick={runAiQuery} disabled={aiLoading || !aiQuery.trim()}>
+            {aiLoading ? 'Asking…' : 'Ask'}
+          </button>
+        </label>
+        {aiAnswer != null && (
+          <div className="explore-ai-answer">
+            <p>{aiAnswer}</p>
+            {aiHighlightIds.length > 0 && (
+              <p className="explore-ai-highlight-note">Highlighted {aiHighlightIds.length} colony(ies) on the map.</p>
+            )}
+          </div>
+        )}
+      </div>
       <aside className="sidebar">
         <div className="filters">
           <label className="search-colony">
@@ -188,7 +307,7 @@ export function ExplorePage() {
             <ul className="search-results">
               {filteredBySearch.slice(0, 5).map((r) => (
                 <li key={r.colony_id}>
-                  <button type="button" className="search-result-btn" onClick={() => setCenterOn({ lat: r.latitude, lng: r.longitude })}>
+                  <button type="button" className="search-result-btn" onClick={() => { setCenterOn({ lat: r.latitude, lng: r.longitude }); setSelectedColony(r); }}>
                     {r.colony_id} — {r.risk_category}
                   </button>
                 </li>
@@ -238,6 +357,50 @@ export function ExplorePage() {
           {landLossLayer && (
             <p className="landloss-hint">Green = growing (sediment). Red = sinking (land loss).</p>
           )}
+          <label className="toggle">
+            <input
+              type="checkbox"
+              checked={imageryOverlay}
+              onChange={(e) => setImageryOverlay(e.target.checked)}
+            />
+            <span>Aerial / satellite imagery overlay</span>
+          </label>
+          {imageryOverlay && (
+            <>
+              <p className="landloss-hint">
+                USGS imagery under colonies and land-loss zones. Cross-validates Delta-X subsidence with visible land change.
+              </p>
+              <label className="imagery-opacity-label">
+                <span>Imagery opacity</span>
+                <input
+                  type="range"
+                  min={50}
+                  max={100}
+                  value={Math.round(imageryOverlayOpacity * 100)}
+                  onChange={(e) => setImageryOverlayOpacity(Number(e.target.value) / 100)}
+                />
+              </label>
+            </>
+          )}
+          <div className="explore-before-after">
+            <button
+              type="button"
+              className="explore-btn"
+              onClick={() => {
+                let colony: RiskScore | null = null
+                if (searchQuery.trim()) {
+                  colony = riskData.find((r) => r.colony_id.toLowerCase().includes(searchQuery.trim().toLowerCase())) ?? null
+                }
+                if (!colony && centerOn) {
+                  colony = riskData.find((r) => Math.abs(r.latitude - centerOn.lat) < 0.01 && Math.abs(r.longitude - centerOn.lng) < 0.01) ?? null
+                }
+                setSelectedColony(colony)
+                setShowImageryComparison(true)
+              }}
+            >
+              2010 vs 2024 imagery
+            </button>
+          </div>
           <div className="explore-actions">
             <button type="button" className="explore-btn" onClick={() => exportRiskDataCSV(riskData)} disabled={loading || riskData.length === 0}>
               Export CSV
@@ -270,6 +433,85 @@ export function ExplorePage() {
             </ol>
           </div>
         )}
+        <div id="change-detection" className="change-detection-panel">
+          <h3>Automated change detection</h3>
+          <p className="change-detection-blurb">
+            Compare aerial imagery from two years; compute vegetation/reflectance change and show it alongside Delta-X risk. Does the imagery confirm the model?
+          </p>
+          {top5.length > 0 && (
+            <div className="change-detection-colonies">
+              <span>Colonies (pick 2–3):</span>
+              {top5.slice(0, 5).map((s) => (
+                <label key={s.colony_id} className="change-detection-check">
+                  <input
+                    type="checkbox"
+                    checked={changeDetectionColonyIds.includes(s.colony_id)}
+                    onChange={(e) => {
+                      if (e.target.checked) setChangeDetectionColonyIds((prev) => [...prev, s.colony_id].slice(-5))
+                      else setChangeDetectionColonyIds((prev) => prev.filter((id) => id !== s.colony_id))
+                    }}
+                  />
+                  <span>{s.colony_id}</span>
+                </label>
+              ))}
+            </div>
+          )}
+          <div className="change-detection-years">
+            <label>
+              <span>Year A</span>
+              <input type="number" min={2000} max={2021} value={changeYearA} onChange={(e) => setChangeYearA(Number(e.target.value))} />
+            </label>
+            <label>
+              <span>Year B</span>
+              <input type="number" min={2001} max={2024} value={changeYearB} onChange={(e) => setChangeYearB(Number(e.target.value))} />
+            </label>
+          </div>
+          <button type="button" className="explore-btn change-detection-run" onClick={runChangeDetection} disabled={changeLoading}>
+            {changeLoading ? 'Running…' : 'Run change detection'}
+          </button>
+          {changeError && (
+            <div className="change-detection-error-wrap">
+              <p className="change-detection-error">{changeError}</p>
+              <p className="change-detection-error-hint">
+                From the project root (the folder that contains <code>server/</code>), run: <code>rm -rf server/.venv && ./run-backend.sh</code>. If you're not in the project root, first run <code>cd /path/to/nx2026</code> (or wherever the project lives). Then open <a href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer">http://localhost:8000/docs</a> to confirm <strong>POST /api/change-detection</strong> exists.
+              </p>
+              <button type="button" className="explore-btn" onClick={() => { setChangeError(null); runChangeDetection(); }}>
+                Try again
+              </button>
+            </div>
+          )}
+          {changeResults != null && changeResults.length > 0 && (
+            <div className="change-detection-results">
+              {changeResults.some((r) => !r.imagery_available && !r.error) && (
+                <p className="change-detection-est-hint">Values marked “Est.” use placeholders when satellite imagery is unavailable; Delta-X risk is from the model.</p>
+              )}
+              <table className="change-detection-table">
+                <thead>
+                  <tr>
+                    <th>Colony</th>
+                    <th>Vegetation Δ%</th>
+                    <th>Visible Δ%</th>
+                    <th>Delta-X risk</th>
+                    <th>Imagery</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {changeResults.map((r) => (
+                    <tr key={r.colony_id}>
+                      <td>{r.colony_id}</td>
+                      <td>{r.vegetation_change_pct != null ? `${r.vegetation_change_pct > 0 ? '+' : ''}${r.vegetation_change_pct}%${!r.imagery_available && !r.error ? ' Est.' : ''}` : '—'}</td>
+                      <td>{r.visible_change_pct != null ? `${r.visible_change_pct}%${!r.imagery_available && !r.error ? ' Est.' : ''}` : '—'}</td>
+                      <td><span className={`risk-badge risk-${(r.delta_x_risk || '').toLowerCase()}`}>{r.delta_x_risk}</span></td>
+                      <td>
+                        {r.error ? <span className="change-detection-err">Error</span> : r.imagery_confirms === true ? <span className="change-detection-confirms">Confirms</span> : r.imagery_confirms === false ? <span className="change-detection-diverges">Diverges</span> : r.imagery_available ? '—' : <span className="change-detection-noimg">Est.</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
         {roleConfig.canCompareYears && (
           <div className="compare-years">
             <h3>Compare years</h3>
@@ -308,9 +550,18 @@ export function ExplorePage() {
           heatmap={heatmap}
           loading={loading}
           landLossZones={landLossLayer ? landLossZones : null}
+          highlightColonyIds={aiHighlightIds}
           centerOn={centerOn}
           basemap={basemap}
+          imageryOverlay={imageryOverlay}
+          imageryOverlayOpacity={imageryOverlayOpacity}
         />
+        {showImageryComparison && (
+          <ImageryComparison
+            colony={selectedColony}
+            onClose={() => setShowImageryComparison(false)}
+          />
+        )}
       </main>
     </div>
   )

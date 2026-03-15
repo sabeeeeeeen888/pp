@@ -1,9 +1,57 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { MapContainer, TileLayer, CircleMarker, useMapEvents } from 'react-leaflet'
 import { useAuth } from '../contexts/AuthContext'
 import { getRoleConfig } from '../config/roles'
+import 'leaflet/dist/leaflet.css'
 import './FeaturePage.css'
 import './CitizenSciencePage.css'
+
+const LOUISIANA_CENTER: [number, number] = [29.4, -91.2]
+
+function LocationMapPicker({
+  center,
+  pin,
+  onSelect,
+}: {
+  center: [number, number]
+  pin: [number, number] | null
+  onSelect: (lat: number, lng: number) => void
+}) {
+  function MapClickHandler() {
+    useMapEvents({
+      click(e) {
+        const { lat, lng } = e.latlng
+        onSelect(lat, lng)
+      },
+    })
+    return null
+  }
+
+  return (
+    <div className="citizen-location-map-wrap">
+      <MapContainer
+        center={center}
+        zoom={8}
+        className="citizen-location-map"
+        zoomControl={true}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        />
+        <MapClickHandler />
+        {pin && (
+          <CircleMarker
+            center={pin}
+            radius={10}
+            pathOptions={{ fillColor: '#16a34a', color: '#fff', weight: 2, fillOpacity: 0.9 }}
+          />
+        )}
+      </MapContainer>
+    </div>
+  )
+}
 
 type CitizenSubmission = {
   id: string
@@ -55,9 +103,11 @@ export function CitizenSciencePage() {
   const [submitted, setSubmitted] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [description, setDescription] = useState('')
-  const [location, setLocation] = useState('')
+  const [pinCoords, setPinCoords] = useState<[number, number] | null>(null)
   const [date, setDate] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  const location = pinCoords ? `${pinCoords[0].toFixed(5)}, ${pinCoords[1].toFixed(5)}` : ''
 
   const [previousSubmissions, setPreviousSubmissions] = useState<CitizenSubmission[]>([])
 
@@ -124,7 +174,7 @@ export function CitizenSciencePage() {
     }
   }
 
-  const saveSubmission = (payload: { description: string; location: string; date: string; imageName: string }) => {
+  const saveSubmission = (payload: { description: string; location: string; date: string; imageName: string; latitude?: number; longitude?: number }) => {
     const id = `report-${Date.now()}`
     const entry = {
       id,
@@ -152,13 +202,20 @@ export function CitizenSciencePage() {
     e.preventDefault()
     setSubmitting(true)
     const imageName = imageFile?.name ?? 'Photo attached'
-    saveSubmission({ description, location, date, imageName })
+    saveSubmission({
+      description,
+      location,
+      date,
+      imageName,
+      latitude: pinCoords?.[0],
+      longitude: pinCoords?.[1],
+    })
     setTimeout(() => {
       setSubmitted(true)
       setSubmitting(false)
       setImageFile(null)
       setDescription('')
-      setLocation('')
+      setPinCoords(null)
       setDate('')
     }, 600)
   }
@@ -216,13 +273,17 @@ export function CitizenSciencePage() {
                   />
                 </label>
                 <label>
-                  <span>Location (e.g. area or landmark)</span>
-                  <input
-                    type="text"
-                    placeholder="e.g. Barataria Bay"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
+                  <span>Location — click the map to drop a pin</span>
+                  <LocationMapPicker
+                    center={LOUISIANA_CENTER}
+                    pin={pinCoords}
+                    onSelect={(lat, lng) => setPinCoords([lat, lng])}
                   />
+                  {pinCoords && (
+                    <p className="citizen-location-coords">
+                      Selected: {pinCoords[0].toFixed(5)}, {pinCoords[1].toFixed(5)}
+                    </p>
+                  )}
                 </label>
                 <label>
                   <span>Date observed</span>
@@ -319,13 +380,17 @@ export function CitizenSciencePage() {
                     />
                   </label>
                   <label>
-                    <span>Location (e.g. colony name or area)</span>
-                    <input
-                      type="text"
-                      placeholder="e.g. Barataria Bay"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
+                    <span>Location — click the map to drop a pin</span>
+                    <LocationMapPicker
+                      center={LOUISIANA_CENTER}
+                      pin={pinCoords}
+                      onSelect={(lat, lng) => setPinCoords([lat, lng])}
                     />
+                    {pinCoords && (
+                      <p className="citizen-location-coords">
+                        Selected: {pinCoords[0].toFixed(5)}, {pinCoords[1].toFixed(5)}
+                      </p>
+                    )}
                   </label>
                   <label>
                     <span>Date observed</span>

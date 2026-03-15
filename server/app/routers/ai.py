@@ -1,13 +1,20 @@
 """
-AI-assisted aerial image classification for wildlife habitat monitoring.
-Uses CLIP (zero-shot) when available; falls back to placeholder otherwise.
+AI-assisted aerial image classification and natural-language query.
+Uses CLIP (zero-shot) when available; natural-language query uses Claude when ANTHROPIC_API_KEY is set.
 """
+import json
+import os
 import random
-from fastapi import APIRouter, File, HTTPException, UploadFile
+import re
+from typing import Any, Optional
+
+from fastapi import APIRouter, Body, File, HTTPException, UploadFile
 
 from app.services.clip_classifier import classify_image_clip
 
 router = APIRouter()
+
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 
 
 @router.get("")
@@ -57,3 +64,49 @@ async def classify_aerial_image(file: UploadFile = File(...)):
         return _classify_image_placeholder(content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Classification error: {e!s}")
+
+
+@router.post("/query")
+async def natural_language_query(body: Optional[dict] = Body(default=None)) -> dict:
+    """
+    Answer a natural-language question about the colony data using Claude.
+    Body: { "query": "user question", "context": "optional system context", "colony_data": [...] }.
+    Returns: { "answer": "formatted answer", "colony_ids": ["LA-CO-...", ...] }.
+    """
+    if body is None:
+        body = {}
+    query = (body.get("query") or "").strip()
+    if not query:
+        return {"answer": "Please ask a question about the data.", "colony_ids": []}
+
+    context = body.get("context") or ""
+    colony_data = body.get("colony_data")
+    if isinstance(colony_data, list):
+        context = context + "\n\nColony data (JSON):\n" + json.dumps(colony_data[:200], indent=0)[:30000]
+
+    system_prompt = """You are a helpful assistant for Project Pelican, a coastal bird colony monitoring and restoration decision-support system.
+The user can ask questions about colony data (Louisiana Gulf Coast and beyond). When you mention specific colonies, use their exact colony_id (e.g. LA-CO-12-1001) so the app can highlight them on the map.
+Dataset: colony_id, latitude, longitude, risk_category (Low/Moderate/High), species_list, species_richness, decline_rate, habitat_vulnerability, elevation_decline_rate, sediment_deposition_rate, water_surface_variability.
+Answer concisely. If listing colonies, include their colony_id in parentheses."""
+    if context:
+        system_prompt += "\n\nAdditional context:\n" + context[:8000]
+
+    if not ANTHROPIC_API_KEY:
+        return {
+            "answer": "Natural-language query is not configured. Set ANTHROPIC_API_KEY on the server to enable. Example: \"Which high-risk colonies have Brown Pelican?\" would be answered using the colony dataset.",
+            "colony_ids": [],
+        }
+    try:
+        import anthropic
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        msg = client.messages.create(
+            model="claude-3-5-haiku-20241022",
+            max_tokens=1024,
+            system=system_prompt,
+            messages=[{"role": "user", "content": query}],
+        )
+        text = (msg.content[0].text if msg.content else "") or ""
+        colony_ids = list(set(re.findall(r"(?:LA-CO-[-\w]+|FL-[-\w]+)", text)))
+        return {"answer": text.strip(), "colony_ids": colony_ids[:50]}
+    except Exception as e:
+        return {"answer": f"Query failed: {e!s}", "colony_ids": []}
