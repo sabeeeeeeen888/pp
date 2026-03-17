@@ -6,6 +6,7 @@ import {
   fetchSurfaceWater,
   searchSarGranules,
   fetchRiskScores,
+  fetchNdviEnhancedRiskScores,
 } from '../api'
 import type {
   NdviColonyScore,
@@ -139,8 +140,6 @@ export function SatelliteAnalysisPage() {
     setLoadingApply(true)
     setApplyToast(null)
     try {
-      // Pre-fetch enhanced risk scores so the /priorities page can pick them up from cache
-      const { fetchNdviEnhancedRiskScores } = await import('../api')
       await fetchNdviEnhancedRiskScores(date)
       setApplyToast(`NDVI scores for ${date} applied. Navigating to Priorities…`)
       setTimeout(() => navigate(`/priorities?ndvi_date=${date}`), 1200)

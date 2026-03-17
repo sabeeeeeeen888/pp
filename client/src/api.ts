@@ -287,7 +287,7 @@ export function computeEarlyWarningFromScores(scores: RiskScore[]): EarlyWarning
     const { signals, collapse_risk_score } = earlyWarningSignals(row)
     const collapse_risk = collapse_risk_score >= 0.6 ? 'High' : collapse_risk_score >= 0.3 ? 'Medium' : 'Low'
     const early_warning = collapse_risk === 'High' || collapse_risk === 'Medium' || signals.length >= 2
-    const r = row as Record<string, unknown>
+    const r = row as unknown as Record<string, unknown>
     return {
       colony_id: String(row.colony_id),
       latitude: row.latitude as number | undefined,

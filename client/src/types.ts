@@ -127,7 +127,6 @@ export interface RiskScore {
   deltax_trend?: string
   /** Full coverage tier label from the backend */
   deltax_coverage_tier?: string
-  decline_rate?: number
   /** Set to "MODIS NDVI (satellite)" when vegetation_health was overridden by NDVI analysis */
   ndvi_source?: string | null
 }
