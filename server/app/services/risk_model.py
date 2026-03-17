@@ -140,13 +140,23 @@ def _normalize(x: float, min_val: float, max_val: float) -> float:
     return max(0, min(1, (x - min_val) / (max_val - min_val)))
 
 
-def compute_risk_metrics(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def compute_risk_metrics(
+    records: List[Dict[str, Any]],
+    ndvi_overrides: Dict[str, float] = None,
+) -> List[Dict[str, Any]]:
     """
     Aggregate by colony (site) and compute:
     - species_richness (unique species per site)
     - decline_rate (initial total - final total nests)
     - population_variability (e.g. std/mean across years)
     - habitat_risk_score and risk_category (Low/Moderate/High)
+
+    Args:
+        records: raw colony survey records
+        ndvi_overrides: optional dict mapping colony_id → vegetation_health (0–1)
+            derived from NASA GIBS MODIS NDVI analysis. When supplied, these values
+            replace the Delta-X vegetation_health component in the risk formula,
+            making risk scores reflect current satellite-observed vegetation state.
     """
     # Group by (site_index, lat, lon) or colony_id
     by_site: Dict[int, List[Dict]] = defaultdict(list)
@@ -189,6 +199,13 @@ def compute_risk_metrics(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         lat, lon = first["latitude"], first["longitude"]
         cid = first["colony_id"]
         dx = _delta_x_proxies(cid, lat, lon, site_index)
+
+        # If caller supplied satellite-derived vegetation health, override the
+        # Delta-X proxy value so the risk model reflects current MODIS conditions.
+        ndvi_veg = (ndvi_overrides or {}).get(cid)
+        veg_health = ndvi_veg if ndvi_veg is not None else dx.get("vegetation_health")
+        ndvi_source = "MODIS NDVI (satellite)" if ndvi_veg is not None else None
+
         result.append({
             "colony_id": cid,
             "site_index": site_index,
@@ -205,7 +222,7 @@ def compute_risk_metrics(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             "elevation_decline_rate": dx["elevation_decline_rate"],
             "sediment_deposition_rate": dx.get("sediment_deposition_rate"),
             "water_surface_variability": dx.get("water_surface_variability"),
-            "vegetation_health": dx.get("vegetation_health"),  # None when not available
+            "vegetation_health": veg_health,
             # Raw NASA measurements (None when not loaded)
             "elevation_m_navd88": dx.get("elevation_m_navd88"),
             "sediment_accretion_mm_year": dx.get("sediment_accretion_mm_year"),
@@ -215,6 +232,8 @@ def compute_risk_metrics(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             "datasets_used": dx.get("datasets_used", ""),
             "deltax_trend": dx.get("deltax_trend", "unknown"),
             "deltax_coverage_tier": dx.get("deltax_coverage_tier", "outside Delta-X coverage — using NOAA fallback"),
+            # Track when risk score is satellite-enhanced
+            "ndvi_source": ndvi_source,
         })
 
     # Normalize for scoring (higher = worse)

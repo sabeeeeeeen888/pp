@@ -19,13 +19,46 @@ def _filter_records(year: Optional[int], species: Optional[str]):
 def get_risk_scores(
     year: Optional[int] = Query(None, ge=2010, le=2021),
     species: Optional[str] = Query(None),
+    ndvi_date: Optional[str] = Query(
+        None,
+        description=(
+            "Optional YYYY-MM month. When supplied, MODIS NDVI-derived vegetation "
+            "health scores from NASA GIBS are fetched and injected into the risk "
+            "model, overriding the Delta-X vegetation_health proxy. "
+            "Adds ~1-2 s per request due to tile fetching."
+        ),
+        pattern=r"^\d{4}-\d{2}$",
+    ),
 ) -> List[dict]:
     """
     Habitat risk scores per colony: species richness, decline rate,
     population variability, and risk category (Low/Moderate/High).
+
+    Pass ndvi_date=YYYY-MM to enhance scores with current MODIS satellite data.
     """
     records = _filter_records(year, species)
-    return compute_risk_metrics(records)
+
+    ndvi_overrides: Optional[dict] = None
+    if ndvi_date:
+        try:
+            from app.services.earthdata import fetch_ndvi_for_colonies, ndvi_to_health_score
+            # Build minimal colony list from unfiltered records for NDVI fetching
+            all_scores_raw = compute_risk_metrics(list(COLONY_RECORDS))
+            colony_list = [
+                {"colony_id": s["colony_id"], "latitude": s["latitude"], "longitude": s["longitude"]}
+                for s in all_scores_raw
+            ]
+            ndvi_rows = fetch_ndvi_for_colonies(colony_list, ndvi_date)
+            ndvi_overrides = {
+                r["colony_id"]: r["vegetation_health"]
+                for r in ndvi_rows
+                if r["imagery_available"] and r["vegetation_health"] is not None
+            }
+        except Exception:
+            # NDVI enrichment is optional — fall back silently to base scoring
+            ndvi_overrides = None
+
+    return compute_risk_metrics(records, ndvi_overrides=ndvi_overrides)
 
 
 @router.get("/species-richness")

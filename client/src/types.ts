@@ -1,3 +1,81 @@
+// ── Satellite / Earthdata types ───────────────────────────────────────────────
+
+/** Per-colony NDVI analysis result from NASA GIBS MODIS tiles */
+export interface NdviColonyScore {
+  colony_id: string
+  latitude: number
+  longitude: number
+  /** Visible vegetation index proxy (G-R)/(G+R+1), range -1..+1 */
+  ndvi_mean: number | null
+  /** Vegetation health normalised 0–1 (0 = water/bare, 1 = dense healthy marsh) */
+  vegetation_health: number | null
+  /** Fraction of the colony's 5 km bbox classified as surface water, 0–100 */
+  water_extent_pct: number | null
+  /** True when GIBS imagery was successfully fetched and analysed */
+  imagery_available: boolean
+}
+
+/** SAR granule metadata record from NASA CMR API */
+export interface SarGranule {
+  title: string
+  dataset: string
+  time_start: string
+  time_end: string
+  browse_url: string | null
+  download_url: string | null
+  cloud_cover: number | null
+  spatial_extent: string[]
+}
+
+/** Response from /api/earthdata/ndvi */
+export interface NdviResponse {
+  date: string
+  colony_ndvi: NdviColonyScore[]
+  total_colonies: number
+  imagery_available_count: number
+  overview_tile_b64: string | null
+  leaflet_tile_url: string
+  source: string
+  note: string
+}
+
+/** Response from /api/earthdata/surface-water */
+export interface SurfaceWaterResponse {
+  date: string
+  colony_water: Array<{
+    colony_id: string
+    latitude: number
+    longitude: number
+    water_extent_pct: number | null
+    imagery_available: boolean
+  }>
+  total_colonies: number
+  overview_tile_b64: string | null
+  leaflet_tile_url: string
+  source: string
+}
+
+/** Response from /api/earthdata/sar-search */
+export interface SarSearchResponse {
+  granules: SarGranule[]
+  total: number
+  date_start: string
+  date_end: string
+  search_bbox: { min_lon: number; min_lat: number; max_lon: number; max_lat: number }
+  source: string
+  note: string
+}
+
+/** Response from /api/earthdata/vegetation-scores */
+export interface VegetationScoresResponse {
+  date: string
+  vegetation_scores: Record<string, number>
+  covered_colonies: number
+  total_colonies: number
+}
+
+// ── Colony / Risk types ───────────────────────────────────────────────────────
+
 export interface ColonyRecord {
   colony_id: string
   site_index: number
@@ -50,4 +128,6 @@ export interface RiskScore {
   /** Full coverage tier label from the backend */
   deltax_coverage_tier?: string
   decline_rate?: number
+  /** Set to "MODIS NDVI (satellite)" when vegetation_health was overridden by NDVI analysis */
+  ndvi_source?: string | null
 }

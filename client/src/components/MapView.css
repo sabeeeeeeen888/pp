@@ -59,6 +59,14 @@
   color: var(--text-muted);
 }
 
+.legend-ndvi {
+  color: #86efac;
+}
+
+.legend-evi {
+  color: #93c5fd;
+}
+
 .map-popup-link {
   color: #34d399;
   font-weight: 500;

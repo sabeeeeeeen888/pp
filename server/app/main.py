@@ -110,12 +110,15 @@ def change_detection_endpoint(body: Optional[dict] = Body(default=None)):
     return {"results": results}
 
 # Now load and include other routers
-from app.routers import colonies, analytics, ai, auth
+from app.routers import colonies, analytics, ai, auth, thermal_detection, wildlive, earthdata
 
 app.include_router(colonies.router, prefix="/api/colonies", tags=["colonies"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
 app.include_router(ai.router, prefix="/api/ai", tags=["ai"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(thermal_detection.router, prefix="/api/thermal-detection", tags=["thermal-detection"])
+app.include_router(wildlive.router, prefix="/api/wildlive", tags=["wildlive"])
+app.include_router(earthdata.router, prefix="/api/earthdata", tags=["earthdata"])
 
 
 # Ensure classify is always available; use CLIP when possible

@@ -1,4 +1,10 @@
-import type { RiskScore } from './types'
+import type {
+  RiskScore,
+  NdviResponse,
+  SurfaceWaterResponse,
+  SarSearchResponse,
+  VegetationScoresResponse,
+} from './types'
 
 const DEFAULT_API_BASE = 'http://localhost:8000'
 function getApiBase(): string {
@@ -503,6 +509,87 @@ export async function classifyAerialImage(file: File): Promise<{ class: string; 
       else if (r.status >= 500) msg = 'Server error. Check backend logs.'
     }
     throw new Error(msg)
+  }
+  return r.json()
+}
+
+// ── NASA Earthdata / Satellite Analysis ───────────────────────────────────────
+
+/**
+ * Fetch per-colony NDVI proxy scores from NASA GIBS MODIS tiles.
+ * date: "YYYY-MM" — the monthly composite to use.
+ */
+export async function fetchNdviData(date: string): Promise<NdviResponse> {
+  const { api } = getBase()
+  const r = await fetch(`${api}/earthdata/ndvi?date=${encodeURIComponent(date)}`)
+  if (!r.ok) {
+    const d = await r.json().catch(() => ({}))
+    throw new Error(d.detail ?? `NDVI fetch failed (${r.status})`)
+  }
+  return r.json()
+}
+
+/**
+ * Fetch per-colony surface water extent from MODIS true-color tiles.
+ * date: "YYYY-MM"
+ */
+export async function fetchSurfaceWater(date: string): Promise<SurfaceWaterResponse> {
+  const { api } = getBase()
+  const r = await fetch(`${api}/earthdata/surface-water?date=${encodeURIComponent(date)}`)
+  if (!r.ok) {
+    const d = await r.json().catch(() => ({}))
+    throw new Error(d.detail ?? `Surface water fetch failed (${r.status})`)
+  }
+  return r.json()
+}
+
+/**
+ * Search NASA CMR API for SAR granules over the Gulf Coast.
+ * dateStart / dateEnd: "YYYY-MM-DD"
+ */
+export async function searchSarGranules(
+  dateStart: string,
+  dateEnd: string,
+  pageSize = 10,
+): Promise<SarSearchResponse> {
+  const { api } = getBase()
+  const params = new URLSearchParams({
+    date_start: dateStart,
+    date_end: dateEnd,
+    page_size: String(pageSize),
+  })
+  const r = await fetch(`${api}/earthdata/sar-search?${params}`)
+  if (!r.ok) {
+    const d = await r.json().catch(() => ({}))
+    throw new Error(d.detail ?? `SAR search failed (${r.status})`)
+  }
+  return r.json()
+}
+
+/**
+ * Fetch vegetation health scores (colony_id → 0–1) derived from MODIS NDVI.
+ * date: "YYYY-MM"
+ */
+export async function fetchVegetationScores(date: string): Promise<VegetationScoresResponse> {
+  const { api } = getBase()
+  const r = await fetch(`${api}/earthdata/vegetation-scores?date=${encodeURIComponent(date)}`)
+  if (!r.ok) {
+    const d = await r.json().catch(() => ({}))
+    throw new Error(d.detail ?? `Vegetation scores fetch failed (${r.status})`)
+  }
+  return r.json()
+}
+
+/**
+ * Fetch risk scores enhanced with NDVI-derived vegetation health overrides.
+ * ndviDate: "YYYY-MM" — the satellite month to use for vegetation_health injection.
+ */
+export async function fetchNdviEnhancedRiskScores(ndviDate: string): Promise<RiskScore[]> {
+  const { api } = getBase()
+  const r = await fetch(`${api}/analytics/risk?ndvi_date=${encodeURIComponent(ndviDate)}`)
+  if (!r.ok) {
+    const d = await r.json().catch(() => ({}))
+    throw new Error(d.detail ?? `Enhanced risk fetch failed (${r.status})`)
   }
   return r.json()
 }

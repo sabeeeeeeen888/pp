@@ -15,6 +15,8 @@ import { ReviewPage } from './pages/ReviewPage'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { ColonyDetailPage } from './pages/ColonyDetailPage'
+import { WildLivePage } from './pages/WildLivePage'
+import { SatelliteAnalysisPage } from './pages/SatelliteAnalysisPage'
 import './App.css'
 
 function AppContent() {
@@ -37,6 +39,8 @@ function AppContent() {
           <Route path="/deltax" element={<DeltaXPage />} />
           <Route path="/early-warning" element={<EarlyWarningPage />} />
           <Route path="/colony/:id" element={<ColonyDetailPage />} />
+          <Route path="/wildlive" element={<WildLivePage />} />
+          <Route path="/satellite-analysis" element={<SatelliteAnalysisPage />} />
           <Route path="/review" element={<ReviewPage />} />
           <Route path="*" element={<div className="app-body" style={{ padding: '2rem', textAlign: 'center' }}><h2>Page not found</h2><p><Link to="/">Go home</Link></p></div>} />
         </Routes>

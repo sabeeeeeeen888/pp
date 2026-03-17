@@ -7,6 +7,14 @@ import { getCoverageTierLabel } from '../utils/coverageTier'
 // RiskScore may carry deltax_coverage_tier from backend when real data is loaded
 import './MapView.css'
 
+// NASA GIBS WMTS tile URL template (Web Mercator — compatible with Leaflet default CRS)
+const GIBS_WMTS = (layer: string, date: string) =>
+  `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${layer}/default/${date}-01/GoogleMapsCompatible/{z}/{y}/{x}.png`
+
+const NDVI_LAYER  = 'MODIS_Terra_L3_NDVI_Monthly'
+const EVI_LAYER   = 'MODIS_Terra_L3_EVI_Monthly'
+const GIBS_ATTR   = 'NASA GIBS / MODIS Terra'
+
 const LOUISIANA_CENTER: [number, number] = [29.4, -91.2]
 const DEFAULT_ZOOM = 8
 
@@ -163,6 +171,9 @@ export function MapView({
   imageryOverlay = false,
   imageryOverlayOpacity = 0.85,
   highlightColonyIds = [],
+  ndviWmsDate,
+  waterWmsDate,
+  ndviOpacity = 0.65,
 }: {
   riskData: RiskScore[]
   heatmap: boolean
@@ -173,6 +184,12 @@ export function MapView({
   imageryOverlay?: boolean
   imageryOverlayOpacity?: number
   highlightColonyIds?: string[]
+  /** "YYYY-MM" — when set, renders GIBS MODIS NDVI colorization overlay */
+  ndviWmsDate?: string
+  /** "YYYY-MM" — when set, renders GIBS MODIS EVI (vegetation energy / water) overlay */
+  waterWmsDate?: string
+  /** opacity for NDVI / water overlays (0–1, default 0.65) */
+  ndviOpacity?: number
 }) {
   return (
     <div className="map-view">
@@ -199,6 +216,24 @@ export function MapView({
             zIndex={1}
           />
         )}
+        {ndviWmsDate && (
+          <TileLayer
+            key={`ndvi-${ndviWmsDate}`}
+            url={GIBS_WMTS(NDVI_LAYER, ndviWmsDate)}
+            attribution={GIBS_ATTR}
+            opacity={ndviOpacity}
+            zIndex={2}
+          />
+        )}
+        {waterWmsDate && (
+          <TileLayer
+            key={`evi-${waterWmsDate}`}
+            url={GIBS_WMTS(EVI_LAYER, waterWmsDate)}
+            attribution={GIBS_ATTR}
+            opacity={ndviOpacity}
+            zIndex={2}
+          />
+        )}
         <CenterOn center={centerOn} />
         {landLossZones && landLossZones.length > 0 && <LandLossOverlay zones={landLossZones} />}
         <RiskMarkers data={riskData} heatmap={heatmap} highlightIds={highlightColonyIds} />
@@ -215,6 +250,12 @@ export function MapView({
         )}
         {imageryOverlay && (
           <span className="legend-imagery" title="USGS aerial imagery under colonies & land-loss">Imagery on</span>
+        )}
+        {ndviWmsDate && (
+          <span className="legend-imagery legend-ndvi" title={`NASA MODIS NDVI overlay — ${ndviWmsDate}`}>NDVI {ndviWmsDate}</span>
+        )}
+        {waterWmsDate && !ndviWmsDate && (
+          <span className="legend-imagery legend-evi" title={`NASA MODIS EVI/water overlay — ${waterWmsDate}`}>EVI/water {waterWmsDate}</span>
         )}
         {basemap === 'satellite' && (
           <span className="legend-imagery" title="Satellite base layer">Satellite imagery: Maxar/Mapbox</span>

@@ -1,0 +1,379 @@
+/* ── SatelliteAnalysisPage ─────────────────────────────────────────────────── */
+
+.sat-page {
+  max-width: 960px;
+}
+
+/* Header */
+.sat-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sat-header-text h1 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.sat-header-links {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 0.25rem;
+}
+
+.sat-link-btn {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.sat-link-btn:hover {
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+
+/* Controls bar */
+.sat-controls-bar {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+
+.sat-date-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.sat-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.sat-month-input,
+.sat-date-input {
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.sat-month-input:focus,
+.sat-date-input:focus {
+  outline: none;
+  border-color: var(--text-muted);
+}
+
+.sat-action-btns {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.sat-run-btn {
+  font-size: 0.85rem;
+  padding: 0.45rem 0.9rem;
+}
+
+/* Status strip */
+.sat-status-strip {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+}
+
+.sat-status-pill {
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.sat-pill-green {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.sat-pill-grey {
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.sat-pill-sm {
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.sat-status-dim {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.sat-error {
+  margin-top: 0.5rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  color: #fca5a5;
+}
+
+/* Map section */
+.sat-map-section {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+
+.sat-map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.sat-map-header h2 {
+  margin: 0;
+}
+
+.sat-layer-toggles {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sat-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.sat-toggle input[type="checkbox"] {
+  accent-color: #86efac;
+  width: 14px;
+  height: 14px;
+}
+
+.sat-opacity-row {
+  gap: 0.5rem;
+}
+
+.sat-opacity-slider {
+  width: 80px;
+  accent-color: #86efac;
+}
+
+.sat-opacity-val {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  min-width: 28px;
+}
+
+.sat-map-wrap {
+  height: 420px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.sat-map-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* Colony NDVI table section */
+.sat-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.sat-section-header h2 {
+  margin: 0;
+}
+
+.sat-apply-btn {
+  font-size: 0.82rem;
+  padding: 0.4rem 0.85rem;
+  background: #16a34a;
+  color: #fff;
+}
+
+.sat-apply-btn:hover {
+  background: #15803d;
+  filter: none;
+}
+
+.sat-apply-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sat-toast {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.sat-toast-ok {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #86efac;
+}
+
+.sat-toast-err {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.sat-table-note {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+}
+
+.sat-th-sort {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.sat-th-sort:hover {
+  color: var(--text);
+}
+
+.sat-sort-icon {
+  font-size: 0.7rem;
+  margin-left: 0.2rem;
+  color: var(--text);
+}
+
+.sat-sort-icon.inactive {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.sat-veg-badge {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.sat-method-note {
+  margin-top: 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+/* SAR search section */
+.sat-sar-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0;
+}
+
+.sat-sar-count {
+  margin-bottom: 0.5rem;
+  font-size: 0.82rem;
+}
+
+.sat-no-sar {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  font-size: 0.9rem;
+}
+
+.sat-no-sar p {
+  margin: 0 0 0.5rem;
+  color: var(--text);
+}
+
+/* Data sources grid */
+.sat-sources {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+
+.sat-source-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.sat-source-card {
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.sat-source-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.2rem;
+}
+
+.sat-source-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+
+.sat-source-detail {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
